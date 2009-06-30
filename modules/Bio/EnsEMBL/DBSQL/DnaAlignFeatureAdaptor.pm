@@ -169,7 +169,6 @@ sub store {
       my $attr_adaptor = $db->get_AttributeAdaptor();
       $attr_adaptor->store_on_DnaDnaAlignFeature($feat, $feat->get_all_Attributes());
 
-
       next FEATURE;
     }
 
@@ -223,9 +222,96 @@ sub store {
     $original->dbID($sth->{'mysql_insertid'});
     $original->adaptor($self);
 
-    # store gene attributes if there are any
+
+
+  }
+
+  $sth->finish();
+}
+
+
+sub update {
+  my ($self, @feats) = @_;
+
+  throw("Must call store with features") if( scalar(@feats) == 0 );
+
+  my @tabs = $self->_tables;
+  my ($tablename) = @{$tabs[0]};
+
+  my $db = $self->db();
+  my $analysis_adaptor = $db->get_AnalysisAdaptor();
+
+  my $sth = $self->prepare(qq{UPDATE $tablename set seq_region_id=?, seq_region_start=?, seq_region_end=?, seq_region_strand=?, hit_start=?, hit_end=?, hit_strand=?, hit_name=?, cigar_line=?, analysis_id=?, score=?, evalue=?, perc_ident=?, external_db_id=?, hcoverage=?, pair_dna_align_feature_id=? where dna_align_feature_id=?});
+  
+ FEATURE: foreach my $feat ( @feats ) {
+    if( !ref $feat || !$feat->isa("Bio::EnsEMBL::DnaDnaAlignFeature") ) {
+      throw("feature must be a Bio::EnsEMBL::DnaDnaAlignFeature,"
+            . " not a [".ref($feat)."].");
+    }
+
+    if(! $feat->is_stored($db)) {
+      warning("DnaDnaAlignFeature [".$feat->dbID."] is not stored" .
+              " in this database, calling store instead..");
+      
+      $self->store( $feat );
+      next FEATURE;
+    }
+
+    # store attributes if there are any
     my $attr_adaptor = $db->get_AttributeAdaptor();
-    $attr_adaptor->store_on_DnaDnaAlignFeature($original->dbID(), $feat->get_all_Attributes());
+    $attr_adaptor->store_on_DnaDnaAlignFeature($feat, $feat->get_all_Attributes());
+
+
+    my $hstart = $feat->hstart();
+    my $hend   = $feat->hend();
+    my $hstrand = $feat->hstrand();
+    $self->_check_start_end_strand($hstart,$hend, $hstrand);
+
+    my $cigar_string = $feat->cigar_string();
+    if(!$cigar_string) {
+      $cigar_string = $feat->length() . 'M';
+      warning("DnaDnaAlignFeature does not define a cigar_string.\n" .
+              "Assuming ungapped block with cigar_line=$cigar_string .");
+    }
+
+    my $hseqname = $feat->hseqname();
+    if(!$hseqname) {
+      throw("DnaDnaAlignFeature must define an hseqname.");
+    }
+
+    if(!defined($feat->analysis)) {
+      throw("An analysis must be attached to the features to be stored.");
+    }
+
+    #store the analysis if it has not been stored yet
+    if(!$feat->analysis->is_stored($db)) {
+      $analysis_adaptor->store($feat->analysis());
+    }
+
+    my $original = $feat;
+    my $seq_region_id;
+    ($feat, $seq_region_id) = $self->_pre_store($feat);
+    $sth->bind_param(1,$seq_region_id);
+    $sth->bind_param(2,$feat->start);
+    $sth->bind_param(3,$feat->end);
+    $sth->bind_param(4,$feat->strand);
+    $sth->bind_param(5,$hstart);
+    $sth->bind_param(6,$hend);
+    $sth->bind_param(7,$hstrand);
+    $sth->bind_param(8,$hseqname);
+    $sth->bind_param(9,$cigar_string);
+    $sth->bind_param(10,$feat->analysis->dbID);
+    $sth->bind_param(11,$feat->score);
+    $sth->bind_param(12,$feat->p_value);
+    $sth->bind_param(13,$feat->percent_id);
+    $sth->bind_param(14,$feat->external_db_id);
+    $sth->bind_param(15,$feat->hcoverage);
+    $sth->bind_param(16,$feat->pair_dna_align_feature_id);
+    $sth->bind_param(17,$feat->dbID);
+
+    $sth->execute();
+    $original->dbID($sth->{'mysql_insertid'});
+    $original->adaptor($self);
 
 
   }
