@@ -310,7 +310,7 @@ sub update {
     $sth->bind_param(17,$feat->dbID);
 
     $sth->execute();
-    $original->dbID($sth->{'mysql_insertid'});
+#    $original->dbID($sth->{'mysql_insertid'});
     $original->adaptor($self);
 
 
