@@ -205,6 +205,7 @@ sub fetch_by_punch_type {
 					 -punch_type      => $punch_type,
 					 -punched         => $hash_ref->{punched},
 					 -name          => $hash_ref->{name}, 
+					 -comment         => $hash_ref->{comment}, 
 					 );
     push @punches, $punch;
   }  
@@ -244,6 +245,7 @@ sub fetch_all {
 					 -punch_type      => $punch_type,
 					 -punched         => $hash_ref->{punched},
 					 -name            => $hash_ref->{name}, 
+					 -comment         => $hash_ref->{comment}, 
 					 );
     push @punches, $punch;
   }  
