@@ -163,7 +163,8 @@ sub fetch_by_dbID {
 				       -adaptor         => $self,
 				       -punch_type      => $punch_type,
 				       -punched         => $hash_ref->{punched},
-				       -name          => $hash_ref->{name}, 
+				       -name            => $hash_ref->{name}, 
+				       -comment         => $hash_ref->{comment}, 
 				       )  
       if ($hash_ref->{punch_id});
   
