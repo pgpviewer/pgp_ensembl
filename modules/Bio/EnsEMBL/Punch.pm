@@ -31,10 +31,11 @@ sub new {
 
   my $self = bless {}, $class;
 
-  my ( $dbID, $adaptor, $punch_type, $punched, $name) =
+  my ( $dbID, $adaptor, $comment, $punch_type, $punched, $name) =
       rearrange([qw(
 		    DBID
 		    ADAPTOR
+		    COMMENT
 		    PUNCH_TYPE
 		    PUNCHED 
 		    NAME
@@ -49,6 +50,8 @@ sub new {
   $self->name( $name );
   $self->punch_type( $punch_type );
   $self->punched( $punched );
+
+  $self->comment( $comment ) if ( $comment );
 
   return $self; 
 }
@@ -77,6 +80,18 @@ sub name {
   $self->{name} = $name if ( $name );
  
   return $self->{name};
+}
+
+# 
+# 
+# 
+# Kim Brugger (06 Jul 2009), contact: kb8@sanger.ac.uk
+sub comment {
+  my ($self, $comment) = @_;
+  
+  $self->{ comment } = $comment if ( $comment );
+ 
+  return $self->{comment};
 }
 
 

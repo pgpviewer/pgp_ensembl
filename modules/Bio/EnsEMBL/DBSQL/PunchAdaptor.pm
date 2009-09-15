@@ -55,7 +55,7 @@ sub store {
   my $dbc = $self->dbc();
   my $punch_type_adaptor = $self->db->get_PunchTypeAdaptor();
 
-  my $sth = $self->prepare("INSERT IGNORE INTO punch (punch_type_id, name, punched) VALUES (?,?,?)");
+  my $sth = $self->prepare("INSERT IGNORE INTO punch (punch_type_id, name, punched, comment) VALUES (?,?,?,?)");
 
 
  PUNCH: 
@@ -78,6 +78,8 @@ sub store {
     $sth->bind_param(2, $punch->name );
     $sth->bind_param(3, $punch->punched || 'n' );
 
+    $sth->bind_param(4, $punch->comment || '' );
+
     $sth->execute();
     $punch->dbID($sth->{'mysql_insertid'});
 #    $punch->adaptor($self);
@@ -98,7 +100,7 @@ sub update {
   my $dbc = $self->dbc();
   my $punch_type_adaptor = $self->db->get_PunchTypeAdaptor();
 
-  my $sth = $self->prepare("UPDATE punch SET punch_type_id=?, name=?, punched=? WHERE punch_id=?");
+  my $sth = $self->prepare("UPDATE punch SET punch_type_id=?, name=?, punched=? comment=? WHERE punch_id=?");
 
 
  PUNCH: foreach my $punch ( @punches ) {
@@ -119,7 +121,8 @@ sub update {
    $sth->bind_param(1, $punch->punch_type->dbID() );
    $sth->bind_param(2, $punch->name );
    $sth->bind_param(3, $punch->punched );
-   $sth->bind_param(4, $punch->dbID );
+   $sth->bind_param(4, $punch->comment || '' );
+   $sth->bind_param(5, $punch->dbID );
    
    print STDERR "UPDATING THE ENTRY :: " . $punch->dbID . " ::\n";
 
