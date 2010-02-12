@@ -147,6 +147,7 @@ sub store {
 
   my $db = $self->db();
   my $analysis_adaptor = $db->get_AnalysisAdaptor();
+  my $attr_adaptor     = $db->get_AttributeAdaptor();
 
   my $sth = $self->prepare(
      "INSERT INTO $tablename (seq_region_id, seq_region_start, seq_region_end,
@@ -223,7 +224,7 @@ sub store {
     $original->adaptor($self);
 
 
-
+    $attr_adaptor->store_on_DnaDnaAlignFeature($original, $original->get_all_Attributes());
   }
 
   $sth->finish();
