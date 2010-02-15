@@ -255,6 +255,30 @@ sub fetch_all {
   return \@punches;
 }
 
+
+# 
+# remove all entries with this type.
+# 
+# Kim Brugger (12 Feb 2010)
+sub purge {
+  my ($self, $punch_code) = @_;
+  
+  return undef if ( ! $punch_code );
+
+  my $dbc = $self->dbc();
+  my $pta = $self->db->get_PunchTypeAdaptor();
+  
+  my $punch_type = $pta->fetch_by_punch_type( $punch_code );
+  return undef if ( ! $punch_type );
+
+  my $punch_type_id = $punch_type->dbID();
+  my $query = "DELETE FROM punch WHERE punch_type_id=$punch_type_id";
+  
+  my $sth = $dbc->prepare($query);
+  $sth->execute();
+}
+
+
 1;
 
 
