@@ -352,21 +352,6 @@ sub _store_type {
   my $self = shift;
   my $attrib = shift;
 
-  # kb8 :: 
-  # first check if the attrip_type exists, otherwise the attrib_type_id is 
-  # incremented constantly when every trying to store this.
-
-  my $sth2 = $self->prepare
-      ("SELECT attrib_type_id FROM attrib_type " .
-       "WHERE code = ?");
-  $sth2->bind_param(1,$attrib->code,SQL_VARCHAR);
-  $sth2->execute();
-  my ($atid) = $sth2->fetchrow_array();
-  $sth2->finish();
-  return $atid if ( $atid );
-
-
-
   my $sth1 = $self->prepare
     ("INSERT IGNORE INTO attrib_type set code = ?, name = ?, ".
      "description = ?" );
@@ -378,10 +363,13 @@ sub _store_type {
 
   my $rows_inserted =  $sth1->execute();
 
-  $atid = $sth1->{'mysql_insertid'};
+  my $atid = $sth1->{'mysql_insertid'};
 
   if($rows_inserted == 0) {
     # the insert failed because the code is already stored
+    my $sth2 = $self->prepare
+      ("SELECT attrib_type_id FROM attrib_type " .
+       "WHERE code = ?");
     $sth2->bind_param(1,$attrib->code,SQL_VARCHAR);
     $sth2->execute();
     ($atid) = $sth2->fetchrow_array();
